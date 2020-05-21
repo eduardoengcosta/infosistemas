@@ -1,0 +1,272 @@
+unit uFrmCadClientes;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics,  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Data.DB, Vcl.StdCtrls,
+  Vcl.Grids, Vcl.DBGrids, Vcl.Mask, system.json, idHttp, IdSSLOpenSSL,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
+  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
+  FireDAC.Comp.DataSet, FireDAC.Comp.Client, System.Rtti,
+  System.Bindings.Outputs, Vcl.Bind.Editors, Data.Bind.EngExt,
+  Vcl.Bind.DBEngExt, Data.Bind.Components, Data.Bind.DBScope, Xml.xmldom,
+  Xml.XMLIntf, Xml.XMLDoc, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
+  IdSSL, IdAntiFreezeBase, IdAntiFreeze, IdMessage, IdBaseComponent,
+  IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
+  IdMessageClient, IdSMTPBase, IdSMTP, Datasnap.DBClient, Vcl.DBCtrls, uProcessos,
+  uEnviaEmail;
+
+type
+  TFormCadClientes = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    DBGrid1: TDBGrid;
+    GroupBox1: TGroupBox;
+    Label2: TLabel;
+    DsDados: TDataSource;
+    BtnGravar: TButton;
+    btnSair: TButton;
+    edtEmail: TDBEdit;
+    lbEmail: TLabel;
+    edtTelefone: TDBEdit;
+    lbTelefone: TLabel;
+    edtCPF: TDBEdit;
+    lbCPF: TLabel;
+    edtIdentidade: TDBEdit;
+    lbIdentidade: TLabel;
+    edtNome: TDBEdit;
+    lbNome: TLabel;
+    cdsDados: TClientDataSet;
+    cdsDadosNOME: TStringField;
+    cdsDadosIDENTIDADE: TStringField;
+    cdsDadosCPF: TStringField;
+    cdsDadosTELEFONE: TStringField;
+    cdsDadosEMAIL: TStringField;
+    cdsDadosCEP: TStringField;
+    cdsDadosLOGRADOURO: TStringField;
+    cdsDadosNUMERO: TStringField;
+    cdsDadosCOMPLEMENTO: TStringField;
+    cdsDadosBAIRRO: TStringField;
+    cdsDadosCIDADE: TStringField;
+    cdsDadosESTADO: TStringField;
+    cdsDadosPAIS: TStringField;
+    cbEstado: TDBComboBox;
+    edtPais: TDBEdit;
+    lbPais: TLabel;
+    edtCidade: TDBEdit;
+    edtBairro: TDBEdit;
+    lbBairro: TLabel;
+    edtCompl: TDBEdit;
+    lbComplemento: TLabel;
+    edtNumero: TDBEdit;
+    lbNumero: TLabel;
+    edtLogradouro: TDBEdit;
+    lbLogradouro: TLabel;
+    edtCEP: TDBEdit;
+    lbEstado: TLabel;
+    lbCidade: TLabel;
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure edtCEPKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure BtnGravarClick(Sender: TObject);
+    procedure btnSairClick(Sender: TObject);
+  private
+    { Private declarations }
+    function GetCEP(pCEP:string) : TJSONObject;
+    procedure CarregaCEP(JSON : TJSONObject);
+    procedure LimpaLogradouro(pLimpar :  Boolean = True);
+  public
+    { Public declarations }
+    function SomenteNumeros(const sTexto: string): string;
+  end;
+
+var
+  FormCadClientes: TFormCadClientes;
+  Proced : TProcedimentos;
+  EnvEmail : TEnviarEmail;
+
+const
+  C_CEP = '<<CEP>>';
+  C_HTTP_URL = 'https://viacep.com.br/ws/'+C_CEP+'/json' ;
+  C_CEP_INVALIDO = 'CEP Inválido';
+  C_CEP_NaoEncontrado = 'CEP não encontrado';
+
+implementation
+
+{$R *.dfm}
+
+
+procedure TFormCadClientes.BtnGravarClick(Sender: TObject);
+var
+  NomeArq : String;
+begin
+  if DsDados.State in [dsEdit, dsInsert] then
+  begin
+    if Proced.ValidaEmail(edtEmail.Text) then
+    begin
+      if Proced.ValidaCPF(edtCPF.Text) then
+      begin
+        if Trim(SomenteNumeros(edtCEP.Text)) <> '' then
+        begin
+           DsDados.DataSet.Post;
+
+           NomeArq := ExtractFileDir(GetCurrentDir)+'\clie'+FormatDateTime('MMSS',now)+'.xml';
+           cdsDados.SaveToFile(NomeArq, dfXMLUTF8);
+           if EnvEmail.EnviarEmail(edtEmail.Text,edtNome.Text,NomeArq) then
+             MessageDlg('Cadastro realizado com sucesso!',mtInformation,[mbOk],0);
+           cdsDados.Insert;
+        end
+        else
+          MessageDlg('Preencha o CEP!',mtError,[mbOk],0);
+      end
+      else
+        MessageDlg('CPF Inválido!',mtError,[mbOk],0);
+    end
+    else
+      MessageDlg('Email Inválido!',mtError,[mbOk],0);
+  end
+  else
+  begin
+    NomeArq := ExtractFileDir(GetCurrentDir)+'\clie'+FormatDateTime('MMSS',now)+'.xml';
+    cdsDados.SaveToFile(NomeArq, dfXMLUTF8);
+    if EnvEmail.EnviarEmail(edtEmail.Text,edtNome.Text,NomeArq) then
+      MessageDlg('Cadastro realizado com sucesso!',mtInformation,[mbOk],0);
+  end;
+end;
+
+procedure TFormCadClientes.btnSairClick(Sender: TObject);
+begin
+ Close;
+end;
+
+procedure TFormCadClientes.CarregaCEP(JSON: TJSONObject);
+begin
+  LimpaLogradouro(False);
+
+  edtLogradouro.Text := JSON.Get('logradouro'             ).JsonValue.Value;
+  edtCidade.Text     := UpperCase(JSON.Get('localidade'   ).JsonValue.Value);
+  edtBairro.Text     := JSON.Get('bairro'                 ).JsonValue.Value;
+  cbEstado.Text      := JSON.Get('uf'                     ).JsonValue.Value;
+  edtCompl.Text      := JSON.Get('complemento'            ).JsonValue.Value;
+
+end;
+
+procedure TFormCadClientes.edtCEPKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  LJosonObj : TJSONObject;
+
+  procedure ExibirErro(sMsg : string);
+  begin
+    ShowMessage(sMsg);
+    LimpaLogradouro();
+    edtCPF.SetFocus;
+  end;
+begin
+  if key = VK_F3 then
+  begin
+
+    LimpaLogradouro(False);
+    if Length(SomenteNumeros(edtCEP.Text))<> 8 then
+      ExibirErro(C_CEP_INVALIDO)
+    else
+    begin
+      LJosonObj := GetCEP(SomenteNumeros(edtCEP.Text));
+      if LJosonObj <> nil then
+      begin
+        CarregaCEP(LJosonObj);
+        edtNumero.SetFocus;
+      end
+      else
+        ExibirErro(C_CEP_NaoEncontrado);
+    end;
+  end;
+end;
+
+procedure TFormCadClientes.FormCreate(Sender: TObject);
+begin
+   cdsDados.CreateDataSet;
+   cdsDados.Active := True;
+
+   if DsDados.DataSet.State = dsBrowse then;
+    DsDados.DataSet.Insert;
+end;
+
+procedure TFormCadClientes.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if key = #13 then
+  begin
+    key := #0;
+    Perform(WM_NEXTDLGCTL, 0, 0);
+  end;
+
+end;
+
+function TFormCadClientes.GetCEP(pCEP: string): TJSONObject;
+var
+  idHttp       : TIdHTTP;
+  idSSlHandler : TIdSSLIOHandlerSocketOpenSSL;
+  sRetorno     : TStringStream;
+  LJsonObj     : TJSONObject;
+  sPath        : string;
+begin
+
+  try
+
+    idHttp           := TIdHTTP.Create();
+    idSSlHandler     := TIdSSLIOHandlerSocketOpenSSL.Create;
+    idHttp.IOHandler := idSSlHandler;
+    idSSlHandler.SSLOptions.SSLVersions := [sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2];
+
+    sPath := StringReplace(C_HTTP_URL, C_CEP, pCEP,[rfReplaceAll, rfIgnoreCase]);
+    sRetorno := TStringStream.Create('');
+    idHttp.Get(sPath, sRetorno);
+
+    if (idHttp.ResponseCode = 200) and
+       (not(Utf8ToAnsi(sRetorno.DataString)= '{'#$A' "erro": true'#$A'}')) then
+       Result := TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(Utf8ToAnsi(sRetorno.DataString)),0) as TJSONObject;;
+
+  finally
+    FreeAndNil(idHttp);
+    FreeAndNil(idSSlHandler);
+    sRetorno.Destroy;
+  end;
+
+end;
+
+procedure TFormCadClientes.LimpaLogradouro(pLimpar: Boolean);
+begin
+  if pLimpar then
+    edtCEP.Text := '';
+
+  edtLogradouro.Text  := '';
+  edtCidade.Text    := '';
+  edtBairro.Text    := '';
+  cbEstado.ItemIndex := -1;
+  edtCompl.Text     := '';
+  edtPais.Text      := '';
+
+end;
+
+function TFormCadClientes.SomenteNumeros(const sTexto: string): string;
+var
+  vText : PChar;
+begin
+  vText := PChar(sTexto);
+  Result := '';
+
+  while (vText^ <> #0) do
+  begin
+    {$IFDEF UNICODE}
+    if CharInSet(vText^, ['0'..'9']) then
+    {$ELSE}
+    if vText^ in ['0'..'9'] then
+    {$ENDIF}
+      Result := Result + vText^;
+
+    Inc(vText);
+  end;
+end;
+
+end.

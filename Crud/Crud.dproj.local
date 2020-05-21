@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2020/05/19 19:11:26.000.196,=D:\Eduardo\Infosistemas\Crud\Unit2.pas</Transaction>
+    <Transaction>2020/05/19 19:11:41.000.187,D:\Eduardo\Infosistemas\Crud\view\uFrmCadClientes.dfm=D:\Eduardo\Infosistemas\Crud\Unit2.dfm</Transaction>
+    <Transaction>2020/05/19 19:11:41.000.187,D:\Eduardo\Infosistemas\Crud\view\uFrmCadClientes.pas=D:\Eduardo\Infosistemas\Crud\Unit2.pas</Transaction>
+    <Transaction>2020/05/19 21:40:10.000.700,=D:\Eduardo\Infosistemas\Crud\Win32\Debug\openssl-1.0.2q-i386-win32\ssleay32.dll</Transaction>
+    <Transaction>2020/05/19 21:40:10.000.693,=D:\Eduardo\Infosistemas\Crud\Win32\Debug\openssl-1.0.2q-i386-win32\libeay32.dll</Transaction>
+    <Transaction>2020/05/19 21:41:12.000.439,D:\Eduardo\Infosistemas\Crud\Win32\Debug\openssl-1.0.2q-i386-win32\ssleay32.dll=</Transaction>
+    <Transaction>2020/05/19 21:41:12.000.455,D:\Eduardo\Infosistemas\Crud\Win32\Debug\openssl-1.0.2q-i386-win32\libeay32.dll=</Transaction>
+    <Transaction>2020/05/19 23:35:37.000.243,=D:\Eduardo\Infosistemas\Crud\Unit1.pas</Transaction>
+    <Transaction>2020/05/19 23:36:06.000.521,D:\Eduardo\Infosistemas\Crud\uProcessos.pas=D:\Eduardo\Infosistemas\Crud\Unit1.pas</Transaction>
+    <Transaction>2020/05/19 23:43:11.000.924,=D:\Eduardo\Infosistemas\Crud\Unit1.pas</Transaction>
+    <Transaction>2020/05/19 23:43:19.000.448,D:\Eduardo\Infosistemas\Crud\uEnviaEmail.pas=D:\Eduardo\Infosistemas\Crud\Unit1.pas</Transaction>
+    <Transaction>2020/05/20 19:59:25.000.102,=D:\Eduardo\Infosistemas\Crud\Unit1.pas</Transaction>
+    <Transaction>2020/05/20 19:59:40.000.219,D:\Eduardo\Infosistemas\Crud\Unit1.pas=D:\Eduardo\Infosistemas\Crud\uClientes.pas</Transaction>
+    <Transaction>2020/05/20 20:32:03.000.366,D:\Eduardo\Infosistemas\Crud\uClientes.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

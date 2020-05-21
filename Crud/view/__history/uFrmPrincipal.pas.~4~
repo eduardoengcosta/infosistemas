@@ -1,0 +1,47 @@
+unit uFrmPrincipal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus;
+
+type
+  TFormPrincipal = class(TForm)
+    MainMenu1: TMainMenu;
+    Cadastro1: TMenuItem;
+    Clientes1: TMenuItem;
+    procedure Clientes1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormPrincipal: TFormPrincipal;
+
+implementation
+
+{$R *.dfm}
+
+uses uFrmCadClientes;
+
+procedure TFormPrincipal.Clientes1Click(Sender: TObject);
+var
+  FrmClie : TFormCadClientes;
+begin
+
+   FrmClie := TFormCadClientes.Create(Self);
+   try
+     FrmClie.ShowMOdal;
+
+   finally
+     FreeAndNil(FrmClie);
+   end;
+
+
+
+end;
+
+end.
